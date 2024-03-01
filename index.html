@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGL Example</title>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="myCanvas"></canvas>
+
+    <script>
+        window.onload = function () {
+            // Mendapatkan referensi ke elemen canvas
+            var canvas = document.getElementById('myCanvas');
+
+            // Mengecek apakah browser mendukung WebGL versi 2
+            if (!canvas.getContext('webgl2')) {
+                console.error('WebGL versi 2 tidak didukung di browser ini.');
+                return;
+            }
+
+            // Mendapatkan konteks WebGL versi 2
+            var gl = canvas.getContext('webgl2');
+
+            // Mengecek apakah konteks WebGL versi 2 berhasil didapatkan
+            if (!gl) {
+                console.error('Konteks WebGL versi 2 tidak dapat ditemukan.');
+                return;
+            }
+
+            // Mendefinisikan verteks dan fragment shader
+            var vertexShaderSource = `
+        #version 300 es
+        in vec2 a_position;
+        void main() {
+            gl_Position = vec4(a_position, 0, 1);
+        }
+    `;
+
+            var fragmentShaderSource = `
+        #version 300 es
+        precision mediump float;
+        out vec4 outColor;
+        void main() {
+            outColor = vec4(1.0, 0.0, 0.0, 1.0);
+        }
+    `;
+
+            // Membuat dan mengkompilasi vertex shader
+            var vertexShader = gl.createShader(gl.VERTEX_SHADER);
+            gl.shaderSource(vertexShader, vertexShaderSource);
+            gl.compileShader(vertexShader);
+            if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+                console.error('Kesalahan saat mengompilasi vertex shader:', gl.getShaderInfoLog(vertexShader));
+                return;
+            }
+
+            // Membuat dan mengkompilasi fragment shader
+            var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+            gl.shaderSource(fragmentShader, fragmentShaderSource);
+            gl.compileShader(fragmentShader);
+            if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+                console.error('Kesalahan saat mengompilasi fragment shader:', gl.getShaderInfoLog(fragmentShader));
+                return;
+            }
+
+            // Membuat program shader
+            var program = gl.createProgram();
+            gl.attachShader(program, vertexShader);
+            gl.attachShader(program, fragmentShader);
+            gl.linkProgram(program);
+            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                console.error('Kesalahan saat menghubungkan program shader:', gl.getProgramInfoLog(program));
+                return;
+            }
+
+            // Menggunakan program shader yang telah dibuat
+            gl.useProgram(program);
+
+            // Mendefinisikan posisi titik (x, y) untuk tiga titik membentuk segitiga di tengah layar
+            var positionData = new Float32Array([
+                -0.5, -0.5,  // koordinat titik 1 (kiri bawah)
+                0.5, -0.5,  // koordinat titik 2 (kanan bawah)
+                0.0, 0.5   // koordinat titik 3 (atas)
+            ]);
+
+            // Membuat buffer untuk data posisi
+            var positionBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, positionData, gl.STATIC_DRAW);
+
+            // Mendapatkan lokasi atribut 'a_position' di program shader
+            var positionAttributeLocation = gl.getAttribLocation(program, 'a_position');
+
+            // Menghubungkan buffer data posisi ke atribut 'a_position' di program shader
+            gl.enableVertexAttribArray(positionAttributeLocation);
+            gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+
+            // Membersihkan layar dan mengubah warna latar belakang menjadi putih
+            gl.clearColor(1, 1, 1, 1); // Warna putih
+            gl.clear(gl.COLOR_BUFFER_BIT);
+
+            // Menggambar segitiga merah di tengah layar
+            gl.drawArrays(gl.TRIANGLES, 0, 3); // Menggunakan 3 titik untuk menggambar segitiga
+        };
+    </script>
+</body>
+
+</html>
